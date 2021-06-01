@@ -5,9 +5,16 @@ import checkAdmin from '../util/checkAdmin';
 import { isABN, isAddress } from '../util/validators';
 
 export const create = async (req: Request, res: Response): Promise<Response> => {
-  // req.user.sub
+  let user: string;
+
+  if (process.env.NODE_ENV === 'production') {
+    user = req.user.sub;
+  } else {
+    user = req.body.user;
+  }
+
   const {
-    user, abn, name, phone, fax, address, suburb, state, postCode,
+    abn, name, phone, fax, address, suburb, state, postCode,
   } = req.body;
 
   const isAdmin = await checkAdmin(user);
@@ -69,9 +76,16 @@ export const get = async (req: Request, res: Response): Promise<Response> => {
 };
 
 export const update = async (req: Request, res: Response): Promise<Response> => {
-  // req.user.sub
+  let user: string;
+
+  if (process.env.NODE_ENV === 'production') {
+    user = req.user.sub;
+  } else {
+    user = req.body.user;
+  }
+
   const {
-    user, abn, name, phone, fax, address, suburb, state, postCode,
+    abn, name, phone, fax, address, suburb, state, postCode,
   } = req.body;
 
   const profile = await Profile.findOne({ user });

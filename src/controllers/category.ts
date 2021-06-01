@@ -5,8 +5,15 @@ import Category from '../models/Category';
 import checkAdmin from '../util/checkAdmin';
 
 export const create = async (req: Request, res: Response): Promise<Response> => {
-  // req.user.sub
-  const { user, title } = req.body;
+  let user: string;
+
+  if (process.env.NODE_ENV === 'production') {
+    user = req.user.sub;
+  } else {
+    user = req.body.user;
+  }
+
+  const { title } = req.body;
 
   const isAdmin = await checkAdmin(user);
   if (!user || !isAdmin) {
@@ -39,8 +46,14 @@ export const get = async (req: Request, res: Response): Promise<Response> => {
 };
 
 export const remove = async (req: Request, res: Response): Promise<Response> => {
-  // req.user.sub
-  const { user } = req.body;
+  let user: string;
+
+  if (process.env.NODE_ENV === 'production') {
+    user = req.user.sub;
+  } else {
+    user = req.body.user;
+  }
+
   const { id } = req.params;
 
   if (!isValidObjectId(id)) {

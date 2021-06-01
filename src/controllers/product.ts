@@ -6,9 +6,16 @@ import checkAdmin from '../util/checkAdmin';
 import { isPrice } from '../util/validators';
 
 export const create = async (req: Request, res: Response): Promise<Response> => {
-  // req.user.sub
+  let user: string;
+
+  if (process.env.NODE_ENV === 'production') {
+    user = req.user.sub;
+  } else {
+    user = req.body.user;
+  }
+
   const {
-    user, name, price, options, extras, description,
+    name, price, options, extras, description,
   } = req.body;
 
   const isAdmin = await checkAdmin(user);
@@ -59,9 +66,16 @@ export const getAll = async (req: Request, res: Response): Promise<Response> => 
 };
 
 export const update = async (req: Request, res: Response): Promise<Response> => {
-  // req.user.sub
+  let user: string;
+
+  if (process.env.NODE_ENV === 'production') {
+    user = req.user.sub;
+  } else {
+    user = req.body.user;
+  }
+
   const {
-    user, name, price, options, extras, description,
+    name, price, options, extras, description,
   } = req.body;
   const { id } = req.params;
 
@@ -105,8 +119,14 @@ export const update = async (req: Request, res: Response): Promise<Response> => 
 };
 
 export const remove = async (req: Request, res: Response): Promise<Response> => {
-  // req.user.sub
-  const { user } = req.body;
+  let user: string;
+
+  if (process.env.NODE_ENV === 'production') {
+    user = req.user.sub;
+  } else {
+    user = req.body.user;
+  }
+
   const { id } = req.params;
 
   if (!isValidObjectId(id)) {

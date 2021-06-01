@@ -1,3 +1,6 @@
+import {
+  afterAll, describe, beforeAll, expect, test,
+} from 'jest';
 import mongoose from 'mongoose';
 import request from 'supertest';
 import app from '../src/app';
@@ -131,7 +134,7 @@ describe('product route', () => {
   });
 
   describe('GET /api/product/:id route', () => {
-    let productID: mongoose.Types.ObjectId;
+    let productID;
 
     beforeAll(async () => {
       const product = await Product.findOne({ name: 'product' }).exec();
@@ -147,7 +150,7 @@ describe('product route', () => {
   });
 
   describe('PATCH /api/product/:id route', () => {
-    let productID: mongoose.Types.ObjectId;
+    let productID;
 
     beforeAll(async () => {
       const product = await Product.findOne({ name: 'product' }).exec();
@@ -258,7 +261,7 @@ describe('product route', () => {
   });
 
   describe('DELETE /api/product/:id route', () => {
-    let productID: mongoose.Types.ObjectId;
+    let productID;
 
     beforeAll(async () => {
       const product = await Product.findOne({ name: 'product' }).exec();

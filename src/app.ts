@@ -1,14 +1,16 @@
 import cors from 'cors';
-import express, { Request, Response } from 'express';
+import express from 'express';
 import helmet from 'helmet';
 import config from './config';
 
+import * as cart from './controllers/cart';
 import * as category from './controllers/category';
+import * as order from './controllers/order';
 import * as product from './controllers/product';
 import * as profile from './controllers/profile';
 import errorHandler from './util/errorHandler';
 
-const app = express();
+const app: express.Application = express();
 
 app.set('port', process.env.PORT || 5000);
 app.set('env', process.env.NODE_ENV || 'development');
@@ -18,13 +20,15 @@ app.use(express.urlencoded({ extended: true }));
 app.use(helmet(config.helmet));
 app.use(config.morgan);
 
-app.get('/admin', (req: Request, res: Response) => {
-  res.send('hello world');
-});
-
+app.get('/api/cart', cart.get);
+app.post('/api/cart', order.create);
+app.patch('/api/cart', cart.update);
 app.get('/api/category', category.get);
 app.post('/api/category', category.create);
 app.delete('/api/category/:id', category.remove);
+app.get('/api/order/:id', order.get);
+app.get('/api/order', order.getAll);
+app.patch('api/order', order.update);
 app.get('/api/product', product.getAll);
 app.get('/api/product/:id', product.get);
 app.post('/api/product', product.create);

@@ -6,8 +6,14 @@ import checkAdmin from '../util/checkAdmin';
 import { isStatus } from '../util/validators';
 
 export const get = async (req: Request, res: Response): Promise<Response> => {
-  // req.user.sub
-  const { user } = req.body;
+  let user: string;
+
+  if (process.env.NODE_ENV === 'production') {
+    user = req.user.sub;
+  } else {
+    user = req.body.user;
+  }
+
   const { id } = req.params;
 
   const order = await Order.findById(id);
@@ -24,8 +30,13 @@ export const get = async (req: Request, res: Response): Promise<Response> => {
 };
 
 export const getAll = async (req: Request, res: Response): Promise<Response> => {
-  // req.user.sub
-  const { user } = req.body;
+  let user: string;
+
+  if (process.env.NODE_ENV === 'production') {
+    user = req.user.sub;
+  } else {
+    user = req.body.user;
+  }
 
   const order = await Order.find({ user });
   if (!order.length) {
@@ -34,23 +45,16 @@ export const getAll = async (req: Request, res: Response): Promise<Response> => 
   return res.status(200).json({ order, type: 'success' });
 };
 
-export const getCart = async (req: Request, res: Response): Promise<Response> => {
-  // req.user.sub
-  const { user } = req.body;
+export const create = async (req: Request, res: Response): Promise<Response> => {
+  let user: string;
 
-  const order = await Order.findOne({ user, status: 'CART' });
-  if (!order) {
-    return res.status(404).json({ message: 'Order not found.', type: 'error' });
+  if (process.env.NODE_ENV === 'production') {
+    user = req.user.sub;
+  } else {
+    user = req.body.user;
   }
 
-  return res.status(200).json({ order, type: 'success' });
-};
-
-export const create = async (req: Request, res: Response): Promise<Response> => {
-  // req.user.sub
-  const {
-    user, items,
-  } = req.body;
+  const { items } = req.body;
   let price = 0;
 
   const order = await Order.findOne({ user, type: 'cart' });
@@ -63,10 +67,9 @@ export const create = async (req: Request, res: Response): Promise<Response> => 
     price = calculatePrice(items);
   }
 
-  // create cart
   await Order.create({
     user,
-    status: 'OPEN',
+    status: 'open',
     type: 'cart',
     items,
     price,
@@ -77,12 +80,18 @@ export const create = async (req: Request, res: Response): Promise<Response> => 
 };
 
 export const update = async (req: Request, res: Response): Promise<Response> => {
-  // req.user.sub
+  let user: string;
+
+  if (process.env.NODE_ENV === 'production') {
+    user = req.user.sub;
+  } else {
+    user = req.body.user;
+  }
+
   const {
-    user, status, type, items, notes,
+    status, notes,
   } = req.body;
   const { id } = req.params;
-  let price = 0;
 
   const order = await Order.findById(id);
   if (!order) {
@@ -106,15 +115,8 @@ export const update = async (req: Request, res: Response): Promise<Response> => 
     return res.status(400).json({ errors: errors.array() });
   }
 
-  if (items) {
-    price = calculatePrice(items);
-  }
-
   await Order.findByIdAndUpdate(id, {
     status,
-    type,
-    items,
-    price,
     notes,
   });
 

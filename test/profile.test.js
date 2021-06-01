@@ -1,3 +1,6 @@
+import {
+  afterAll, describe, beforeAll, expect, test,
+} from 'jest';
 import mongoose from 'mongoose';
 import request from 'supertest';
 import app from '../src/app';

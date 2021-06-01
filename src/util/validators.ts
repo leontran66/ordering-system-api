@@ -62,7 +62,7 @@ export const isPrice: CustomValidator = (value: string) => {
 };
 
 export const isStatus: CustomValidator = (value: string) => {
-  const status = ['CART', 'OPEN', 'RECEIVED', 'PAID', 'READY', 'DELIVERED', 'CLOSED'];
+  const status = ['cart', 'closed', 'delivered', 'open', 'paid', 'ready', 'received'];
   if (status.some((state) => value === state)) {
     return true;
   }
