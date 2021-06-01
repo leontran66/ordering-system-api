@@ -1,24 +1,10 @@
-/* import {
-  afterAll, describe, beforeAll, expect, test,
-} from 'jest';
-import mongoose from 'mongoose';
 import request from 'supertest';
 import app from '../src/app';
 import config from '../src/config';
-import Category from '../src/models/Category';
+import db from '../src/config/pg';
+import { getCategory } from './testQueries';
 
 describe('category route', () => {
-  beforeAll(async () => {
-    await mongoose.connect(config.secrets.MONGODB_URI_LOCAL || '', {
-      useNewUrlParser: true,
-      useFindAndModify: false,
-      useCreateIndex: true,
-      useUnifiedTopology: true,
-    }).catch(() => {
-      process.exit(1);
-    });
-  });
-
   describe('GET /api/category route', () => {
     test('no categories returns error and 404 Not Found', async () => {
       expect.assertions(3);
@@ -79,7 +65,7 @@ describe('category route', () => {
     });
 
     test('valid inputs returns success and 200 OK', async () => {
-      expect.assertions(5);
+      expect.assertions(3);
       const res = await request(app).post('/api/category')
         .send({
           user: config.secrets.AUTH0_ADMIN_ID,
@@ -88,9 +74,6 @@ describe('category route', () => {
       expect(res.status).toBe(200);
       expect(res.body.message).toBe('Category created.');
       expect(res.body.type).toBe('success');
-      const category = await Category.findOne({ title: 'category' });
-      expect(category).not.toBeNull();
-      expect(category && category.products).toHaveLength(0);
     });
   });
 
@@ -105,22 +88,11 @@ describe('category route', () => {
   });
 
   describe('DELETE /api/category route', () => {
-    let categoryID;
+    let categoryID: string;
 
     beforeAll(async () => {
-      const category = await Category.findOne({ title: 'category' });
-      categoryID = category && category._id;
-    });
-
-    test('invalid id returns error and 400 Bad Request', async () => {
-      expect.assertions(3);
-      const res = await request(app).delete('/api/category/123')
-        .send({
-          user: '',
-        });
-      expect(res.status).toBe(400);
-      expect(res.body.message).toBe('Invalid ID.');
-      expect(res.body.type).toBe('error');
+      const category = await db.any(getCategory, 'category');
+      categoryID = category.length > 0 && category[0].id;
     });
 
     test('empty user returns error and 401 Unauthorized', async () => {
@@ -158,7 +130,7 @@ describe('category route', () => {
 
     test('category not found returns error and 400 Bad Request', async () => {
       expect.assertions(3);
-      const res = await request(app).delete(`/api/category/${mongoose.Types.ObjectId()}`)
+      const res = await request(app).delete('/api/category/123')
         .send({
           user: config.secrets.AUTH0_ADMIN_ID,
         });
@@ -168,7 +140,7 @@ describe('category route', () => {
     });
 
     test('valid inputs returns success and 200 OK', async () => {
-      expect.assertions(4);
+      expect.assertions(3);
       const res = await request(app).delete(`/api/category/${categoryID}`)
         .send({
           user: config.secrets.AUTH0_ADMIN_ID,
@@ -176,12 +148,6 @@ describe('category route', () => {
       expect(res.status).toBe(200);
       expect(res.body.message).toBe('Category deleted.');
       expect(res.body.type).toBe('success');
-      const category = await Category.findOne({ title: 'category' });
-      expect(category).toBeNull();
     });
   });
-
-  afterAll(async () => {
-    mongoose.connection.close();
-  });
-}); */
+});
