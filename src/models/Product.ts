@@ -5,7 +5,7 @@ export type ProductDocument = Document & {
   price: number;
   options: Array<{
     name: string;
-    price: string;
+    price: number;
   }>;
   extras: Array<string>;
   description: string;

@@ -1,6 +1,7 @@
 import cors from 'cors';
 import express from 'express';
 import helmet from 'helmet';
+import morgan from 'morgan';
 import config from './config';
 
 import * as cart from './controllers/cart';
@@ -18,7 +19,7 @@ app.use(cors(config.cors));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(helmet(config.helmet));
-app.use(config.morgan);
+app.use(morgan('dev'));
 
 app.get('/api/cart', cart.get);
 app.post('/api/cart', order.create);
