@@ -1,9 +1,13 @@
 import { Request, Response } from 'express';
 import { check, validationResult } from 'express-validator';
-import { isValidObjectId } from 'mongoose';
-import Product from '../models/Product';
+import db from '../config/pg';
+import Option from '../types/option';
 import checkAdmin from '../util/checkAdmin';
 import { isPrice } from '../util/validators';
+import {
+  createProduct, createProductOptions, deleteProduct, deleteProductOptions,
+  getProduct, getProducts, updateProduct, updateProductOptions,
+} from '../util/queries';
 
 export const create = async (req: Request, res: Response): Promise<Response> => {
   let user: string;
@@ -15,7 +19,7 @@ export const create = async (req: Request, res: Response): Promise<Response> => 
   }
 
   const {
-    name, price, options, extras, description,
+    category, name, price, options, description,
   } = req.body;
 
   const isAdmin = await checkAdmin(user);
@@ -37,12 +41,21 @@ export const create = async (req: Request, res: Response): Promise<Response> => 
     return res.status(400).json({ errors: errors.array() });
   }
 
-  await Product.create({
+  await db.none(createProduct, {
+    category,
     name,
     price,
-    options,
-    extras,
     description,
+  });
+
+  const id = await db.any(getProduct, name);
+
+  options.forEach(async (option: Option) => {
+    await db.none(createProductOptions, {
+      product_id: id[0],
+      name: option.name,
+      price: option.price,
+    });
   });
 
   return res.status(200).json({ message: 'Product created.', type: 'success' });
@@ -50,7 +63,7 @@ export const create = async (req: Request, res: Response): Promise<Response> => 
 
 export const get = async (req: Request, res: Response): Promise<Response> => {
   const { id } = req.params;
-  const product = await Product.findById(id);
+  const product = await db.any(getProduct, id);
   if (!product) {
     return res.status(404).json({ message: 'Product not found.', type: 'error' });
   }
@@ -58,7 +71,7 @@ export const get = async (req: Request, res: Response): Promise<Response> => {
 };
 
 export const getAll = async (req: Request, res: Response): Promise<Response> => {
-  const products = await Product.find({});
+  const products = await db.any(getProducts);
   if (!products.length) {
     return res.status(404).json({ message: 'Products not found.', type: 'error' });
   }
@@ -75,20 +88,16 @@ export const update = async (req: Request, res: Response): Promise<Response> => 
   }
 
   const {
-    name, price, options, extras, description,
+    category, name, price, options, description,
   } = req.body;
   const { id } = req.params;
-
-  if (!isValidObjectId(id)) {
-    return res.status(400).json({ message: 'Invalid ID.', type: 'error' });
-  }
 
   const isAdmin = await checkAdmin(user);
   if (!user || !isAdmin) {
     return res.status(401).json({ message: 'Unauthorized action.', type: 'error' });
   }
 
-  const product = await Product.findById(id);
+  const product = await db.any(getProduct, id);
   if (!product) {
     return res.status(404).json({ message: 'Product not found.', type: 'error' });
   }
@@ -107,12 +116,20 @@ export const update = async (req: Request, res: Response): Promise<Response> => 
     return res.status(400).json({ errors: errors.array() });
   }
 
-  await Product.findByIdAndUpdate(id, {
+  await db.none(updateProduct, {
+    category,
     name,
     price,
-    options,
-    extras,
     description,
+    id,
+  });
+
+  options.forEach(async (option: Option) => {
+    await db.none(updateProductOptions, {
+      name: option.name,
+      price: option.price,
+      id: option.id,
+    });
   });
 
   return res.status(200).json({ message: 'Product updated.', type: 'success' });
@@ -129,21 +146,19 @@ export const remove = async (req: Request, res: Response): Promise<Response> => 
 
   const { id } = req.params;
 
-  if (!isValidObjectId(id)) {
-    return res.status(400).json({ message: 'Invalid ID.', type: 'error' });
-  }
-
   const isAdmin = await checkAdmin(user);
   if (!user || !isAdmin) {
     return res.status(401).json({ message: 'Unauthorized action.', type: 'error' });
   }
 
-  const product = await Product.findById(id);
+  const product = await db.any(getProduct, id);
   if (!product) {
     return res.status(404).json({ message: 'Product not found.', type: 'error' });
   }
 
-  await Product.findByIdAndDelete(id);
+  await db.none(deleteProduct, id);
+
+  await db.none(deleteProductOptions, id);
 
   return res.status(200).json({ message: 'Product deleted.', type: 'success' });
 };

@@ -28,6 +28,7 @@ CREATE TABLE IF NOT EXISTS products (
 	category_id bigint,
 	name varchar(50) NOT NULL,
 	price int NOT NULL,
+	description varchar(50) NOT NULL,
 	PRIMARY KEY(id),
 	CONSTRAINT fk_category
 		FOREIGN KEY(category_id)
