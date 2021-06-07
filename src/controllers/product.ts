@@ -6,7 +6,7 @@ import checkAdmin from '../util/checkAdmin';
 import { isPrice } from '../util/validators';
 import {
   createProduct, createProductOptions, deleteProduct, deleteProductOptions,
-  getProduct, getProducts, updateProduct, updateProductOptions,
+  getProductById, getProductByName, getProducts, updateProduct, updateProductOptions,
 } from '../util/queries';
 
 export const create = async (req: Request, res: Response): Promise<Response> => {
@@ -19,7 +19,7 @@ export const create = async (req: Request, res: Response): Promise<Response> => 
   }
 
   const {
-    category, name, price, options, description,
+    category, name, price, description, options,
   } = req.body;
 
   const isAdmin = await checkAdmin(user);
@@ -48,7 +48,7 @@ export const create = async (req: Request, res: Response): Promise<Response> => 
     description,
   });
 
-  const id = await db.any(getProduct, name);
+  const id = await db.any(getProductByName, name);
 
   options.forEach(async (option: Option) => {
     await db.none(createProductOptions, {
@@ -63,11 +63,11 @@ export const create = async (req: Request, res: Response): Promise<Response> => 
 
 export const get = async (req: Request, res: Response): Promise<Response> => {
   const { id } = req.params;
-  const product = await db.any(getProduct, id);
-  if (!product) {
+  const product = await db.any(getProductById, id);
+  if (!product.length) {
     return res.status(404).json({ message: 'Product not found.', type: 'error' });
   }
-  return res.status(200).json({ product, type: 'success' });
+  return res.status(200).json({ product: product[0], type: 'success' });
 };
 
 export const getAll = async (req: Request, res: Response): Promise<Response> => {
@@ -88,7 +88,7 @@ export const update = async (req: Request, res: Response): Promise<Response> => 
   }
 
   const {
-    category, name, price, options, description,
+    category, name, price, description, options,
   } = req.body;
   const { id } = req.params;
 
@@ -97,8 +97,8 @@ export const update = async (req: Request, res: Response): Promise<Response> => 
     return res.status(401).json({ message: 'Unauthorized action.', type: 'error' });
   }
 
-  const product = await db.any(getProduct, id);
-  if (!product) {
+  const product = await db.any(getProductById, id);
+  if (!product.length) {
     return res.status(404).json({ message: 'Product not found.', type: 'error' });
   }
 
@@ -151,8 +151,8 @@ export const remove = async (req: Request, res: Response): Promise<Response> => 
     return res.status(401).json({ message: 'Unauthorized action.', type: 'error' });
   }
 
-  const product = await db.any(getProduct, id);
-  if (!product) {
+  const product = await db.any(getProductById, id);
+  if (!product.length) {
     return res.status(404).json({ message: 'Product not found.', type: 'error' });
   }
 

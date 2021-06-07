@@ -4,7 +4,7 @@ CREATE DATABASE ordering_system;
 \c ordering_system;
 
 CREATE TABLE IF NOT EXISTS profile (
-	id serial,
+	id serial NOT NULL,
 	user_id varchar(50) NOT NULL,
 	abn varchar(50) NOT NULL,
 	name varchar(50) NOT NULL,
@@ -18,16 +18,16 @@ CREATE TABLE IF NOT EXISTS profile (
 );
 
 CREATE TABLE IF NOT EXISTS categories (
-	id serial,
+	id serial NOT NULL,
 	title varchar(50) NOT NULL,
 	PRIMARY KEY(id)
 );
 
 CREATE TABLE IF NOT EXISTS products (
-	id serial,
-	category_id bigint,
+	id serial NOT NULL,
+	category_id bigint NOT NULL,
 	name varchar(50) NOT NULL,
-	price int NOT NULL,
+	price decimal(10, 2) NOT NULL,
 	description varchar(50) NOT NULL,
 	PRIMARY KEY(id),
 	CONSTRAINT fk_category
@@ -36,10 +36,10 @@ CREATE TABLE IF NOT EXISTS products (
 );
 
 CREATE TABLE IF NOT EXISTS product_options (
-	id serial,
-	product_id bigint,
+	id serial NOT NULL,
+	product_id bigint NOT NULL,
 	name varchar(50) NOT NULL,
-	price int NOT NULL,
+	price decimal(10, 2) NOT NULL,
 	PRIMARY KEY(id),
 	CONSTRAINT fk_product
 		FOREIGN KEY(product_id)
@@ -47,7 +47,7 @@ CREATE TABLE IF NOT EXISTS product_options (
 );
 
 CREATE TABLE IF NOT EXISTS orders (
-	id serial,
+	id serial NOT NULL,
 	user_id varchar(50) NOT NULL,
 	status varchar(50) NOT NULL,
 	type varchar(50) NOT NULL,
@@ -56,9 +56,9 @@ CREATE TABLE IF NOT EXISTS orders (
 );
 
 CREATE TABLE IF NOT EXISTS order_items (
-	id serial,
-	order_id bigint,
-	product_id bigint,
+	id serial NOT NULL,
+	order_id bigint NOT NULL,
+	product_id bigint NOT NULL,
 	quantity int NOT NULL,
 	PRIMARY KEY(id),
 	CONSTRAINT fk_order
