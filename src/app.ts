@@ -6,7 +6,6 @@ import config from './config';
 
 import * as cart from './controllers/cart';
 import * as category from './controllers/category';
-import * as order from './controllers/order';
 import * as product from './controllers/product';
 import * as profile from './controllers/profile';
 import errorHandler from './util/errorHandler';
@@ -22,14 +21,14 @@ app.use(helmet(config.helmet));
 app.use(morgan('dev'));
 
 app.get('/api/cart', cart.get);
-app.post('/api/cart', order.create);
-app.patch('/api/cart', cart.update);
+app.post('/api/cart', cart.create);
+app.post('api/cart/:id', cart.createItem);
+app.patch('/api/cart', cart.checkout);
+app.patch('/api/cart/:id', cart.updateItem);
+app.delete('api/cart/:id', cart.deleteItem);
 app.get('/api/category', category.get);
 app.post('/api/category', category.create);
 app.delete('/api/category/:id', category.remove);
-app.get('/api/order/:id', order.get);
-app.get('/api/order', order.getAll);
-app.patch('api/order', order.update);
 app.get('/api/product', product.getAll);
 app.get('/api/product/:id', product.get);
 app.post('/api/product', product.create);

@@ -1,7 +1,6 @@
 import { Request, Response } from 'express';
 import { check, validationResult } from 'express-validator';
 import Order from '../models/Order';
-import calculatePrice from '../util/calculatePrice';
 import checkAdmin from '../util/checkAdmin';
 import { isStatus } from '../util/validators';
 
@@ -43,40 +42,6 @@ export const getAll = async (req: Request, res: Response): Promise<Response> => 
     return res.status(404).json({ message: 'Orders not found.', type: 'error' });
   }
   return res.status(200).json({ order, type: 'success' });
-};
-
-export const create = async (req: Request, res: Response): Promise<Response> => {
-  let user: string;
-
-  if (process.env.NODE_ENV === 'production') {
-    user = req.user.sub;
-  } else {
-    user = req.body.user;
-  }
-
-  const { items } = req.body;
-  let price = 0;
-
-  const order = await Order.findOne({ user, type: 'cart' });
-  if (order) {
-    return res.status(401).json({ message: 'Cart already exists.', type: 'error' });
-  }
-
-  if (items) {
-    // in the frontend, item has id, options, quantity and price with setFormData
-    price = calculatePrice(items);
-  }
-
-  await Order.create({
-    user,
-    status: 'open',
-    type: 'cart',
-    items,
-    price,
-    notes: '',
-  });
-
-  return res.status(200).json({ message: 'Order created.', type: 'success' });
 };
 
 export const update = async (req: Request, res: Response): Promise<Response> => {
