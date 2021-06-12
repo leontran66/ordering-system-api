@@ -1,8 +1,8 @@
 import request from 'supertest';
+import { getCategory } from './testQueries';
 import app from '../src/app';
 import config from '../src/config';
 import db from '../src/config/pg';
-import { getCategory } from './testQueries';
 
 describe('category route', () => {
   describe('GET /api/category route', () => {

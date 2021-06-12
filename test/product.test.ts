@@ -1,10 +1,10 @@
 import request from 'supertest';
-import app from '../src/app';
-import config from '../src/config';
-import db from '../src/config/pg';
 import {
   createCategory, deleteCategory, getCategory, getProduct,
 } from './testQueries';
+import app from '../src/app';
+import config from '../src/config';
+import db from '../src/config/pg';
 
 describe('product route', () => {
   let categoryID: string;

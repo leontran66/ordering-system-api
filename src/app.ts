@@ -22,10 +22,10 @@ app.use(morgan('dev'));
 
 app.get('/api/cart', cart.get);
 app.post('/api/cart', cart.create);
-app.post('api/cart/:id', cart.createItem);
+app.post('/api/cart/:id', cart.createItem);
 app.patch('/api/cart', cart.checkout);
 app.patch('/api/cart/:id', cart.updateItem);
-app.delete('api/cart/:id', cart.deleteItem);
+app.delete('/api/cart/:id', cart.deleteItem);
 app.get('/api/category', category.get);
 app.post('/api/category', category.create);
 app.delete('/api/category/:id', category.remove);

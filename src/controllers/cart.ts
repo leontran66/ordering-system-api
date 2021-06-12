@@ -58,6 +58,18 @@ export const create = async (req: Request, res: Response): Promise<Response> => 
     return res.status(401).json({ message: 'Cart already exists.', type: 'error' });
   }
 
+  await check('item').notEmpty().trim().escape()
+    .withMessage('Item is required')
+    .run(req);
+  await check('quantity').notEmpty().trim().escape()
+    .withMessage('Quantity is required')
+    .run(req);
+
+  const errors = validationResult(req);
+  if (!errors.isEmpty()) {
+    return res.status(400).json({ errors: errors.array() });
+  }
+
   await db.none(createCart, user);
 
   const order = await db.any(getCart, user);
@@ -84,6 +96,18 @@ export const createItem = async (req: Request, res: Response): Promise<Response>
   const cart = await db.any(getCart, user);
   if (!cart.length) {
     return res.status(404).json({ message: 'Cart not found.', type: 'error' });
+  }
+
+  await check('item').notEmpty().trim().escape()
+    .withMessage('Item is required')
+    .run(req);
+  await check('quantity').notEmpty().trim().escape()
+    .withMessage('Quantity is required')
+    .run(req);
+
+  const errors = validationResult(req);
+  if (!errors.isEmpty()) {
+    return res.status(400).json({ errors: errors.array() });
   }
 
   await db.none(createCartItem, {
@@ -115,13 +139,13 @@ export const deleteItem = async (req: Request, res: Response): Promise<Response>
     return res.status(404).json({ message: 'Item not found.', type: 'error' });
   }
 
-  if (cart[0].id !== cartItem[0].order_id) {
+  if (parseInt(cart[0].id, 10) !== parseInt(cartItem[0].order_id, 10)) {
     return res.status(401).json({ message: 'Unauthorized action.', type: 'error' });
   }
 
   await db.none(deleteCartItem, id);
 
-  return res.status(200).json({ message: 'Item added to cart.', type: 'success' });
+  return res.status(200).json({ message: 'Cart item deleted.', type: 'success' });
 };
 
 export const get = async (req: Request, res: Response): Promise<Response> => {
@@ -142,7 +166,7 @@ export const get = async (req: Request, res: Response): Promise<Response> => {
     return res.status(404).json({ message: 'Cart not found.', type: 'error' });
   }
 
-  return res.status(200).json({ cart, type: 'success' });
+  return res.status(200).json({ cart: cart[0], type: 'success' });
 };
 
 export const updateItem = async (req: Request, res: Response): Promise<Response> => {
@@ -155,7 +179,7 @@ export const updateItem = async (req: Request, res: Response): Promise<Response>
   }
   const { id } = req.params;
 
-  const { quantity } = req.params;
+  const { quantity } = req.body;
 
   const cart = await db.any(getCart, user);
   if (!cart.length) {
@@ -167,8 +191,17 @@ export const updateItem = async (req: Request, res: Response): Promise<Response>
     return res.status(404).json({ message: 'Item not found.', type: 'error' });
   }
 
-  if (cart[0].id !== cartItem[0].order_id) {
+  if (parseInt(cart[0].id, 10) !== parseInt(cartItem[0].order_id, 10)) {
     return res.status(401).json({ message: 'Unauthorized action.', type: 'error' });
+  }
+
+  await check('quantity').notEmpty().trim().escape()
+    .withMessage('Quantity is required')
+    .run(req);
+
+  const errors = validationResult(req);
+  if (!errors.isEmpty()) {
+    return res.status(400).json({ errors: errors.array() });
   }
 
   await db.none(updateCartItem, {
@@ -176,5 +209,5 @@ export const updateItem = async (req: Request, res: Response): Promise<Response>
     id,
   });
 
-  return res.status(200).json({ message: 'Item added to cart.', type: 'success' });
+  return res.status(200).json({ message: 'Cart item updated.', type: 'success' });
 };
