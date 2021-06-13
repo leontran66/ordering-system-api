@@ -61,7 +61,7 @@ describe('cart route', () => {
   describe('PATCH /api/cart/:id route', () => {
     test('no cart returns error and 404 Not Found', async () => {
       expect.assertions(3);
-      const res = await request(app).post('/api/cart/0')
+      const res = await request(app).patch('/api/cart/0')
         .send({
           user: config.secrets.AUTH0_USER_ID,
           item: productID,
@@ -76,7 +76,7 @@ describe('cart route', () => {
   describe('DELETE /api/cart/:id route', () => {
     test('no cart returns error and 404 Not Found', async () => {
       expect.assertions(3);
-      const res = await request(app).post('/api/cart/0')
+      const res = await request(app).delete('/api/cart/0')
         .send({
           user: config.secrets.AUTH0_USER_ID,
         });
@@ -201,6 +201,18 @@ describe('cart route', () => {
       cartItemID = cartItem.length && cartItem[0].id;
     });
 
+    test('no cart item returns error and 404 Not Found', async () => {
+      expect.assertions(3);
+      const res = await request(app).patch('/api/cart/0')
+        .send({
+          user: config.secrets.AUTH0_USER_ID,
+          quantity: undefined,
+        });
+      expect(res.status).toBe(404);
+      expect(res.body.message).toBe('Item not found.');
+      expect(res.body.type).toBe('error');
+    });
+
     test('no input returns error and 400 Bad Request', async () => {
       expect.assertions(3);
       const res = await request(app).patch(`/api/cart/${cartItemID}`)
@@ -232,6 +244,17 @@ describe('cart route', () => {
     beforeAll(async () => {
       const cartItem = await db.any(getCartItem, productID);
       cartItemID = cartItem.length && cartItem[0].id;
+    });
+
+    test('no cart item returns error and 404 Not Found', async () => {
+      expect.assertions(3);
+      const res = await request(app).delete('/api/cart/0')
+        .send({
+          user: config.secrets.AUTH0_USER_ID,
+        });
+      expect(res.status).toBe(404);
+      expect(res.body.message).toBe('Item not found.');
+      expect(res.body.type).toBe('error');
     });
 
     test('valid input returns success and 200 OK', async () => {

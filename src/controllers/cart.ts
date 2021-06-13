@@ -191,10 +191,6 @@ export const updateItem = async (req: Request, res: Response): Promise<Response>
     return res.status(404).json({ message: 'Item not found.', type: 'error' });
   }
 
-  if (parseInt(cart[0].id, 10) !== parseInt(cartItem[0].order_id, 10)) {
-    return res.status(401).json({ message: 'Unauthorized action.', type: 'error' });
-  }
-
   await check('quantity').notEmpty().trim().escape()
     .withMessage('Quantity is required')
     .run(req);
@@ -202,6 +198,10 @@ export const updateItem = async (req: Request, res: Response): Promise<Response>
   const errors = validationResult(req);
   if (!errors.isEmpty()) {
     return res.status(400).json({ errors: errors.array() });
+  }
+
+  if (parseInt(cart[0].id, 10) !== parseInt(cartItem[0].order_id, 10)) {
+    return res.status(401).json({ message: 'Unauthorized action.', type: 'error' });
   }
 
   await db.none(updateCartItem, {
