@@ -1,8 +1,11 @@
 import { Request, Response } from 'express';
 import { check, validationResult } from 'express-validator';
-import Order from '../models/Order';
+import db from '../config/pg';
 import checkAdmin from '../util/checkAdmin';
 import { isStatus } from '../util/validators';
+import {
+  getAllOrders, getAllOrdersForUser, getOrder, updateOrder,
+} from '../util/queries';
 
 export const get = async (req: Request, res: Response): Promise<Response> => {
   let user: string;
@@ -15,13 +18,13 @@ export const get = async (req: Request, res: Response): Promise<Response> => {
 
   const { id } = req.params;
 
-  const order = await Order.findById(id);
-  if (!order) {
+  const order = await db.any(getOrder, id);
+  if (!order.length) {
     return res.status(404).json({ message: 'Order not found.', type: 'error' });
   }
 
   const isAdmin = await checkAdmin(user);
-  if (order.user !== user && !isAdmin) {
+  if (order[0].user_id !== user && !isAdmin) {
     return res.status(401).json({ message: 'Unauthorized action', type: 'error' });
   }
 
@@ -37,7 +40,28 @@ export const getAll = async (req: Request, res: Response): Promise<Response> => 
     user = req.body.user;
   }
 
-  const order = await Order.find({ user });
+  const isAdmin = await checkAdmin(user);
+  if (!isAdmin) {
+    return res.status(401).json({ message: 'Unauthorized action', type: 'error' });
+  }
+
+  const order = await db.any(getAllOrders);
+  if (!order.length) {
+    return res.status(404).json({ message: 'Orders not found.', type: 'error' });
+  }
+  return res.status(200).json({ order, type: 'success' });
+};
+
+export const getAllForUser = async (req: Request, res: Response): Promise<Response> => {
+  let user: string;
+
+  if (process.env.NODE_ENV === 'production') {
+    user = req.user.sub;
+  } else {
+    user = req.body.user;
+  }
+
+  const order = await db.any(getAllOrdersForUser, user);
   if (!order.length) {
     return res.status(404).json({ message: 'Orders not found.', type: 'error' });
   }
@@ -58,13 +82,13 @@ export const update = async (req: Request, res: Response): Promise<Response> => 
   } = req.body;
   const { id } = req.params;
 
-  const order = await Order.findById(id);
-  if (!order) {
+  const order = await db.any(getOrder, id);
+  if (!order.length) {
     return res.status(404).json({ message: 'Order not found.', type: 'error' });
   }
 
   const isAdmin = await checkAdmin(user);
-  if (order.user !== user || !isAdmin) {
+  if (order[0].user !== user || !isAdmin) {
     return res.status(401).json({ message: 'Unauthorized action', type: 'error' });
   }
 
@@ -72,7 +96,6 @@ export const update = async (req: Request, res: Response): Promise<Response> => 
     .custom(isStatus)
     .withMessage('Invalid status')
     .run(req);
-  await check('type').trim().escape().run(req);
   await check('notes').trim().escape().run(req);
 
   const errors = validationResult(req);
@@ -80,9 +103,10 @@ export const update = async (req: Request, res: Response): Promise<Response> => 
     return res.status(400).json({ errors: errors.array() });
   }
 
-  await Order.findByIdAndUpdate(id, {
+  await db.none(updateOrder, {
     status,
     notes,
+    id,
   });
 
   return res.status(200).json({ message: 'Order updated.', type: 'success' });
