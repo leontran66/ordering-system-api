@@ -1,8 +1,152 @@
 import { Request, Response } from 'express';
 import { check, validationResult } from 'express-validator';
-import Order from '../models/Order';
-import calculatePrice from '../util/calculatePrice';
-import { isStatus } from '../util/validators';
+import db from '../config/pg';
+import {
+  createCart, createCartItem, deleteCartItem, getCart, getCartItem, updateCart, updateCartItem,
+} from '../util/queries';
+
+export const checkout = async (req: Request, res: Response): Promise<Response> => {
+  let user: string;
+
+  if (process.env.NODE_ENV === 'production') {
+    user = req.user.sub;
+  } else {
+    user = req.body.user;
+  }
+
+  const { type } = req.body;
+
+  const cart = await db.any(getCart, user);
+  if (!cart.length) {
+    return res.status(404).json({ message: 'Cart not found.', type: 'error' });
+  }
+
+  await check('type').notEmpty().trim().escape()
+    .withMessage('Type is required')
+    .run(req);
+
+  const errors = validationResult(req);
+  if (!errors.isEmpty()) {
+    return res.status(400).json({ errors: errors.array() });
+  }
+
+  await db.none(updateCart, {
+    type,
+    user,
+  });
+
+  return res.status(200).json({ message: 'Checkout completed.', type: 'success' });
+};
+
+export const create = async (req: Request, res: Response): Promise<Response> => {
+  let user: string;
+
+  if (process.env.NODE_ENV === 'production') {
+    user = req.user.sub;
+  } else {
+    user = req.body.user;
+  }
+
+  const { item, quantity } = req.body;
+
+  if (!user) {
+    return res.status(401).json({ message: 'Unauthorized action.', type: 'error' });
+  }
+
+  const cart = await db.any(getCart, user);
+  if (cart.length) {
+    return res.status(401).json({ message: 'Cart already exists.', type: 'error' });
+  }
+
+  await check('item').notEmpty().trim().escape()
+    .withMessage('Item is required')
+    .run(req);
+  await check('quantity').notEmpty().trim().escape()
+    .withMessage('Quantity is required')
+    .run(req);
+
+  const errors = validationResult(req);
+  if (!errors.isEmpty()) {
+    return res.status(400).json({ errors: errors.array() });
+  }
+
+  await db.none(createCart, user);
+
+  const order = await db.any(getCart, user);
+  await db.none(createCartItem, {
+    order: order[0].id,
+    item,
+    quantity,
+  });
+
+  return res.status(200).json({ message: 'Cart created.', type: 'success' });
+};
+
+export const createItem = async (req: Request, res: Response): Promise<Response> => {
+  let user: string;
+
+  if (process.env.NODE_ENV === 'production') {
+    user = req.user.sub;
+  } else {
+    user = req.body.user;
+  }
+
+  const { item, quantity } = req.body;
+
+  const cart = await db.any(getCart, user);
+  if (!cart.length) {
+    return res.status(404).json({ message: 'Cart not found.', type: 'error' });
+  }
+
+  await check('item').notEmpty().trim().escape()
+    .withMessage('Item is required')
+    .run(req);
+  await check('quantity').notEmpty().trim().escape()
+    .withMessage('Quantity is required')
+    .run(req);
+
+  const errors = validationResult(req);
+  if (!errors.isEmpty()) {
+    return res.status(400).json({ errors: errors.array() });
+  }
+
+  await db.none(createCartItem, {
+    order: cart[0].id,
+    item,
+    quantity,
+  });
+
+  return res.status(200).json({ message: 'Item added to cart.', type: 'success' });
+};
+
+export const deleteItem = async (req: Request, res: Response): Promise<Response> => {
+  let user: string;
+
+  if (process.env.NODE_ENV === 'production') {
+    user = req.user.sub;
+  } else {
+    user = req.body.user;
+  }
+  const { id } = req.params;
+
+  const cart = await db.any(getCart, user);
+  if (!cart.length) {
+    return res.status(404).json({ message: 'Cart not found.', type: 'error' });
+  }
+
+  const cartItem = await db.any(getCartItem, id);
+  if (!cartItem.length) {
+    return res.status(404).json({ message: 'Item not found.', type: 'error' });
+  }
+
+  if (parseInt(cart[0].id, 10) !== parseInt(cartItem[0].order_id, 10)) {
+    return res.status(401).json({ message: 'Unauthorized action.', type: 'error' });
+  }
+
+  await db.none(deleteCartItem, id);
+
+  return res.status(200).json({ message: 'Cart item deleted.', type: 'success' });
+};
 
 export const get = async (req: Request, res: Response): Promise<Response> => {
   let user: string;
@@ -17,15 +161,15 @@ export const get = async (req: Request, res: Response): Promise<Response> => {
     return res.status(401).json({ message: 'Unauthorized action.', type: 'error' });
   }
 
-  const order = await Order.findOne({ user, status: 'cart' });
-  if (!order) {
-    return res.status(404).json({ message: 'Order not found.', type: 'error' });
+  const cart = await db.any(getCart, user);
+  if (!cart.length) {
+    return res.status(404).json({ message: 'Cart not found.', type: 'error' });
   }
 
-  return res.status(200).json({ order, type: 'success' });
+  return res.status(200).json({ cart: cart[0], type: 'success' });
 };
 
-export const update = async (req: Request, res: Response): Promise<Response> => {
+export const updateItem = async (req: Request, res: Response): Promise<Response> => {
   let user: string;
 
   if (process.env.NODE_ENV === 'production') {
@@ -33,41 +177,37 @@ export const update = async (req: Request, res: Response): Promise<Response> => 
   } else {
     user = req.body.user;
   }
-
-  const {
-    status, type, items, notes,
-  } = req.body;
   const { id } = req.params;
-  let price = 0;
 
-  const order = await Order.findOne({ user, status: 'cart' });
-  if (!order) {
-    return res.status(404).json({ message: 'Order not found.', type: 'error' });
+  const { quantity } = req.body;
+
+  const cart = await db.any(getCart, user);
+  if (!cart.length) {
+    return res.status(404).json({ message: 'Cart not found.', type: 'error' });
   }
 
-  await check('status').trim().escape()
-    .custom(isStatus)
-    .withMessage('Invalid status')
+  const cartItem = await db.any(getCartItem, id);
+  if (!cartItem.length) {
+    return res.status(404).json({ message: 'Item not found.', type: 'error' });
+  }
+
+  await check('quantity').notEmpty().trim().escape()
+    .withMessage('Quantity is required')
     .run(req);
-  await check('type').trim().escape().run(req);
-  await check('notes').trim().escape().run(req);
 
   const errors = validationResult(req);
   if (!errors.isEmpty()) {
     return res.status(400).json({ errors: errors.array() });
   }
 
-  if (items) {
-    price = calculatePrice(items);
+  if (parseInt(cart[0].id, 10) !== parseInt(cartItem[0].order_id, 10)) {
+    return res.status(401).json({ message: 'Unauthorized action.', type: 'error' });
   }
 
-  await Order.findByIdAndUpdate(id, {
-    status,
-    type,
-    items,
-    price,
-    notes,
+  await db.none(updateCartItem, {
+    quantity,
+    id,
   });
 
-  return res.status(200).json({ message: 'Order updated.', type: 'success' });
+  return res.status(200).json({ message: 'Cart item updated.', type: 'success' });
 };

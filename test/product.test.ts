@@ -1,22 +1,18 @@
-import {
-  afterAll, describe, beforeAll, expect, test,
-} from 'jest';
-import mongoose from 'mongoose';
 import request from 'supertest';
+import {
+  createCategory, deleteCategory, deleteProduct, getCategory, getProduct,
+} from './testQueries';
 import app from '../src/app';
 import config from '../src/config';
-import Product from '../src/models/Product';
+import db from '../src/config/pg';
 
 describe('product route', () => {
+  let categoryID: string;
+
   beforeAll(async () => {
-    await mongoose.connect(config.secrets.MONGODB_URI_LOCAL || '', {
-      useNewUrlParser: true,
-      useFindAndModify: false,
-      useCreateIndex: true,
-      useUnifiedTopology: true,
-    }).catch(() => {
-      process.exit(1);
-    });
+    await db.none(createCategory, 'product');
+    const category = await db.any(getCategory, 'product');
+    categoryID = category.length && category[0].id;
   });
 
   describe('GET /api/product route', () => {
@@ -32,7 +28,7 @@ describe('product route', () => {
   describe('GET /api/product/:id route', () => {
     test('invalid id returns error and 404 Not Found', async () => {
       expect.assertions(3);
-      const res = await request(app).get(`/api/product/${mongoose.Types.ObjectId()}`);
+      const res = await request(app).get('/api/product/0');
       expect(res.status).toBe(404);
       expect(res.body.message).toBe('Product not found.');
       expect(res.body.type).toBe('error');
@@ -45,6 +41,11 @@ describe('product route', () => {
       const res = await request(app).post('/api/product')
         .send({
           user: '',
+          category: categoryID,
+          name: 'product',
+          price: 5.00,
+          description: '',
+          options: [],
         });
       expect(res.status).toBe(401);
       expect(res.body.message).toBe('Unauthorized action.');
@@ -56,6 +57,11 @@ describe('product route', () => {
       const res = await request(app).post('/api/product')
         .send({
           user: 'test',
+          category: categoryID,
+          name: 'product',
+          price: 5.00,
+          description: '',
+          options: [],
         });
       expect(res.status).toBe(401);
       expect(res.body.message).toBe('Unauthorized action.');
@@ -67,6 +73,11 @@ describe('product route', () => {
       const res = await request(app).post('/api/product')
         .send({
           user: config.secrets.AUTH0_USER_ID,
+          category: categoryID,
+          name: 'product',
+          price: 5.00,
+          description: '',
+          options: [],
         });
       expect(res.status).toBe(401);
       expect(res.body.message).toBe('Unauthorized action.');
@@ -78,11 +89,11 @@ describe('product route', () => {
       const res = await request(app).post('/api/product')
         .send({
           user: config.secrets.AUTH0_ADMIN_ID,
+          category: categoryID,
           name: '',
           price: '',
-          options: [],
-          extras: [],
           description: '',
+          options: [],
         });
       expect(res.status).toBe(400);
       expect(res.body.errors[0].param).toBe('name');
@@ -96,11 +107,11 @@ describe('product route', () => {
       const res = await request(app).post('/api/product')
         .send({
           user: config.secrets.AUTH0_ADMIN_ID,
+          category: categoryID,
           name: 'product',
           price: 'test',
-          options: [],
-          extras: [],
           description: '',
+          options: [],
         });
       expect(res.status).toBe(400);
       expect(res.body.errors[0].param).toBe('price');
@@ -112,11 +123,11 @@ describe('product route', () => {
       const res = await request(app).post('/api/product')
         .send({
           user: config.secrets.AUTH0_ADMIN_ID,
+          category: categoryID,
           name: 'product',
-          price: '5.00',
-          options: [],
-          extras: [],
+          price: 5.00,
           description: '',
+          options: [],
         });
       expect(res.status).toBe(200);
       expect(res.body.message).toBe('Product created.');
@@ -134,11 +145,11 @@ describe('product route', () => {
   });
 
   describe('GET /api/product/:id route', () => {
-    let productID;
+    let productID: string;
 
     beforeAll(async () => {
-      const product = await Product.findOne({ name: 'product' }).exec();
-      productID = product && product._id;
+      const product = await db.any(getProduct, 'product');
+      productID = product.length && product[0].id;
     });
 
     test('product found returns product and 200 OK', async () => {
@@ -150,19 +161,11 @@ describe('product route', () => {
   });
 
   describe('PATCH /api/product/:id route', () => {
-    let productID;
+    let productID: string;
 
     beforeAll(async () => {
-      const product = await Product.findOne({ name: 'product' }).exec();
-      productID = product && product._id;
-    });
-
-    test('invalid id returns error and 401 Unauthorized', async () => {
-      expect.assertions(3);
-      const res = await request(app).patch('/api/product/123');
-      expect(res.status).toBe(400);
-      expect(res.body.message).toBe('Invalid ID.');
-      expect(res.body.type).toBe('error');
+      const product = await db.any(getProduct, 'product');
+      productID = product.length && product[0].id;
     });
 
     test('no user returns error and 401 Unauthorized', async () => {
@@ -170,6 +173,11 @@ describe('product route', () => {
       const res = await request(app).patch(`/api/product/${productID}`)
         .send({
           user: '',
+          category: categoryID,
+          name: 'product',
+          price: 10.00,
+          description: '',
+          options: [],
         });
       expect(res.status).toBe(401);
       expect(res.body.message).toBe('Unauthorized action.');
@@ -181,6 +189,11 @@ describe('product route', () => {
       const res = await request(app).patch(`/api/product/${productID}`)
         .send({
           user: 'test',
+          category: categoryID,
+          name: 'product',
+          price: 10.00,
+          description: '',
+          options: [],
         });
       expect(res.status).toBe(401);
       expect(res.body.message).toBe('Unauthorized action.');
@@ -192,6 +205,11 @@ describe('product route', () => {
       const res = await request(app).patch(`/api/product/${productID}`)
         .send({
           user: config.secrets.AUTH0_USER_ID,
+          category: categoryID,
+          name: 'product',
+          price: 10.00,
+          description: '',
+          options: [],
         });
       expect(res.status).toBe(401);
       expect(res.body.message).toBe('Unauthorized action.');
@@ -200,7 +218,7 @@ describe('product route', () => {
 
     test('product not found returns error and 404 Not Found', async () => {
       expect.assertions(3);
-      const res = await request(app).patch(`/api/product/${mongoose.Types.ObjectId()}`)
+      const res = await request(app).patch('/api/product/0')
         .send({
           user: config.secrets.AUTH0_ADMIN_ID,
         });
@@ -214,11 +232,11 @@ describe('product route', () => {
       const res = await request(app).patch(`/api/product/${productID}`)
         .send({
           user: config.secrets.AUTH0_ADMIN_ID,
+          category: categoryID,
           name: '',
           price: '',
-          options: [],
-          extras: [],
           description: '',
+          options: [],
         });
       expect(res.status).toBe(400);
       expect(res.body.errors[0].param).toBe('name');
@@ -232,11 +250,11 @@ describe('product route', () => {
       const res = await request(app).patch(`/api/product/${productID}`)
         .send({
           user: config.secrets.AUTH0_ADMIN_ID,
+          category: categoryID,
           name: 'product',
           price: 'test',
-          options: [],
-          extras: [],
           description: '',
+          options: [],
         });
       expect(res.status).toBe(400);
       expect(res.body.errors[0].param).toBe('price');
@@ -248,11 +266,11 @@ describe('product route', () => {
       const res = await request(app).patch(`/api/product/${productID}`)
         .send({
           user: config.secrets.AUTH0_ADMIN_ID,
+          category: categoryID,
           name: 'product',
-          price: '10.00',
-          options: [],
-          extras: [],
+          price: 10.00,
           description: '',
+          options: [],
         });
       expect(res.status).toBe(200);
       expect(res.body.message).toBe('Product updated.');
@@ -261,19 +279,11 @@ describe('product route', () => {
   });
 
   describe('DELETE /api/product/:id route', () => {
-    let productID;
+    let productID: string;
 
     beforeAll(async () => {
-      const product = await Product.findOne({ name: 'product' }).exec();
-      productID = product && product._id;
-    });
-
-    test('invalid returns error and 400 Bad Request', async () => {
-      expect.assertions(3);
-      const res = await request(app).delete('/api/product/123');
-      expect(res.status).toBe(400);
-      expect(res.body.message).toBe('Invalid ID.');
-      expect(res.body.type).toBe('error');
+      const product = await db.any(getProduct, 'product');
+      productID = product.length && product[0].id;
     });
 
     test('no user returns error and 401 Unauthorized', async () => {
@@ -309,9 +319,9 @@ describe('product route', () => {
       expect(res.body.type).toBe('error');
     });
 
-    test('product not found returns error and 400 Bad Request', async () => {
+    test('product not found returns error and 404 Not Found', async () => {
       expect.assertions(3);
-      const res = await request(app).delete(`/api/product/${mongoose.Types.ObjectId()}`)
+      const res = await request(app).delete('/api/product/0')
         .send({
           user: config.secrets.AUTH0_ADMIN_ID,
         });
@@ -333,6 +343,7 @@ describe('product route', () => {
   });
 
   afterAll(async () => {
-    mongoose.connection.close();
+    await db.none(deleteProduct);
+    await db.none(deleteCategory);
   });
 });

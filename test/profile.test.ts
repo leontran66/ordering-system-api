@@ -1,24 +1,9 @@
-import {
-  afterAll, describe, beforeAll, expect, test,
-} from 'jest';
-import mongoose from 'mongoose';
 import request from 'supertest';
 import app from '../src/app';
+import db from '../src/config/pg';
 import config from '../src/config';
-import Profile from '../src/models/Profile';
 
 describe('profile route', () => {
-  beforeAll(async () => {
-    await mongoose.connect(config.secrets.MONGODB_URI_LOCAL || '', {
-      useNewUrlParser: true,
-      useFindAndModify: false,
-      useCreateIndex: true,
-      useUnifiedTopology: true,
-    }).catch(() => {
-      process.exit(1);
-    });
-  });
-
   describe('GET /api/profile route', () => {
     test('no profile returns error and 404 Not Found', async () => {
       expect.assertions(3);
@@ -34,8 +19,14 @@ describe('profile route', () => {
       expect.assertions(3);
       const res = await request(app).post('/api/profile')
         .send({
-          abn: '12 123 123 123',
+          abn: '60 579 663 101',
           name: 'profile',
+          phone: '1234 1234',
+          fax: '1234 1234',
+          address: 'hello world',
+          suburb: 'hello world',
+          state: 'QLD',
+          postCode: '1234',
         });
       expect(res.status).toBe(401);
       expect(res.body.message).toBe('Unauthorized action.');
@@ -47,8 +38,14 @@ describe('profile route', () => {
       const res = await request(app).post('/api/profile')
         .send({
           user: config.secrets.AUTH0_USER_ID,
-          abn: '12 123 123 123',
+          abn: '60 579 663 101',
           name: 'profile',
+          phone: '1234 1234',
+          fax: '1234 1234',
+          address: 'hello world',
+          suburb: 'hello world',
+          state: 'QLD',
+          postCode: '1234',
         });
       expect(res.status).toBe(401);
       expect(res.body.message).toBe('Unauthorized action.');
@@ -60,8 +57,14 @@ describe('profile route', () => {
       const res = await request(app).post('/api/profile')
         .send({
           user: 'test',
-          abn: '12 123 123 123',
+          abn: '60 579 663 101',
           name: 'profile',
+          phone: '1234 1234',
+          fax: '1234 1234',
+          address: 'hello world',
+          suburb: 'hello world',
+          state: 'QLD',
+          postCode: '1234',
         });
       expect(res.status).toBe(401);
       expect(res.body.message).toBe('Unauthorized action.');
@@ -103,7 +106,7 @@ describe('profile route', () => {
     });
 
     test('valid inputs returns success and 200 OK', async () => {
-      expect.assertions(4);
+      expect.assertions(3);
       const res = await request(app).post('/api/profile')
         .send({
           user: config.secrets.AUTH0_ADMIN_ID,
@@ -119,8 +122,6 @@ describe('profile route', () => {
       expect(res.status).toBe(200);
       expect(res.body.message).toBe('Profile created.');
       expect(res.body.type).toBe('success');
-      const profile = await Profile.findOne({ name: 'profile' });
-      expect(profile).not.toBeNull();
     });
 
     test('already existing profile returns error and 401 Unauthorized', async () => {
@@ -211,7 +212,7 @@ describe('profile route', () => {
     });
 
     test('valid inputs returns success and 200 OK', async () => {
-      expect.assertions(6);
+      expect.assertions(3);
       const res = await request(app).patch('/api/profile')
         .send({
           user: config.secrets.AUTH0_ADMIN_ID,
@@ -227,15 +228,10 @@ describe('profile route', () => {
       expect(res.status).toBe(200);
       expect(res.body.message).toBe('Profile updated.');
       expect(res.body.type).toBe('success');
-      const profile = await Profile.findOne({ name: 'profile' });
-      expect(profile).not.toBeNull();
-      expect(profile && profile.address).toBe('test');
-      expect(profile && profile.suburb).toBe('test');
     });
   });
 
   afterAll(async () => {
-    await Profile.deleteMany({ name: 'profile' }).exec();
-    mongoose.connection.close();
+    await db.none('DELETE FROM profile');
   });
 });

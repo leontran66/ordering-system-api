@@ -1,6 +1,7 @@
 import cors from 'cors';
 import express from 'express';
 import helmet from 'helmet';
+import morgan from 'morgan';
 import config from './config';
 
 import * as cart from './controllers/cart';
@@ -18,17 +19,21 @@ app.use(cors(config.cors));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(helmet(config.helmet));
-app.use(config.morgan);
+app.use(morgan('dev'));
 
 app.get('/api/cart', cart.get);
-app.post('/api/cart', order.create);
-app.patch('/api/cart', cart.update);
+app.post('/api/cart', cart.create);
+app.post('/api/cart/:id', cart.createItem);
+app.patch('/api/cart', cart.checkout);
+app.patch('/api/cart/:id', cart.updateItem);
+app.delete('/api/cart/:id', cart.deleteItem);
 app.get('/api/category', category.get);
 app.post('/api/category', category.create);
 app.delete('/api/category/:id', category.remove);
+app.get('/api/order', order.getAllForUser);
+app.get('/api/order/all', order.getAll);
 app.get('/api/order/:id', order.get);
-app.get('/api/order', order.getAll);
-app.patch('api/order', order.update);
+app.patch('/api/order/:id', order.update);
 app.get('/api/product', product.getAll);
 app.get('/api/product/:id', product.get);
 app.post('/api/product', product.create);

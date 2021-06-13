@@ -1,8 +1,11 @@
 import { Request, Response } from 'express';
 import { check, validationResult } from 'express-validator';
-import Profile from '../models/Profile';
 import checkAdmin from '../util/checkAdmin';
 import { isABN, isAddress } from '../util/validators';
+import db from '../config/pg';
+import {
+  createProfile, getOwnProfile, getProfile, updateProfile,
+} from '../util/queries';
 
 export const create = async (req: Request, res: Response): Promise<Response> => {
   let user: string;
@@ -17,12 +20,7 @@ export const create = async (req: Request, res: Response): Promise<Response> => 
     abn, name, phone, fax, address, suburb, state, postCode,
   } = req.body;
 
-  const isAdmin = await checkAdmin(user);
-  if (!user || !isAdmin) {
-    return res.status(401).json({ message: 'Unauthorized action.', type: 'error' });
-  }
-
-  const profile = await Profile.find({});
+  const profile = await db.any(getProfile);
   if (profile.length) {
     return res.status(401).json({ message: 'Profile already exists.', type: 'error' });
   }
@@ -52,27 +50,38 @@ export const create = async (req: Request, res: Response): Promise<Response> => 
     return res.status(400).json({ errors: addressErrors });
   }
 
-  await Profile.create({
-    user,
-    name,
-    abn,
-    phone,
-    fax,
-    address,
-    suburb,
-    state,
-    postCode,
-  });
+  if (!user) {
+    return res.status(401).json({ message: 'Unauthorized action.', type: 'error' });
+  }
+
+  const isAdmin = await checkAdmin(user);
+  if (!isAdmin) {
+    return res.status(401).json({ message: 'Unauthorized action.', type: 'error' });
+  }
+
+  await db.none(createProfile,
+    {
+      user,
+      name,
+      abn,
+      phone,
+      fax,
+      address,
+      suburb,
+      state,
+      postCode,
+    });
 
   return res.status(200).json({ message: 'Profile created.', type: 'success' });
 };
 
 export const get = async (req: Request, res: Response): Promise<Response> => {
-  const profile = await Profile.findOne({});
-  if (!profile) {
+  const profile = await db.any(getProfile);
+  if (!profile.length) {
     return res.status(404).json({ message: 'Profile not found.', type: 'error' });
   }
-  return res.status(200).json({ profile });
+
+  return res.status(200).json({ profile: profile[0] });
 };
 
 export const update = async (req: Request, res: Response): Promise<Response> => {
@@ -87,11 +96,6 @@ export const update = async (req: Request, res: Response): Promise<Response> => 
   const {
     abn, name, phone, fax, address, suburb, state, postCode,
   } = req.body;
-
-  const profile = await Profile.findOne({ user });
-  if (!user || !profile) {
-    return res.status(401).json({ message: 'Unauthorized action.', type: 'error' });
-  }
 
   await check('abn').notEmpty().trim().escape()
     .withMessage('ABN is required')
@@ -118,15 +122,25 @@ export const update = async (req: Request, res: Response): Promise<Response> => 
     return res.status(400).json({ errors: addressErrors });
   }
 
-  await Profile.findOneAndUpdate({ user }, {
-    name,
+  if (!user) {
+    return res.status(401).json({ message: 'Unauthorized action.', type: 'error' });
+  }
+
+  const profile = await db.any(getOwnProfile, user);
+  if (!profile.length) {
+    return res.status(401).json({ message: 'Unauthorized action.', type: 'error' });
+  }
+
+  db.none(updateProfile, {
     abn,
+    name,
     phone,
     fax,
     address,
     suburb,
     state,
     postCode,
+    user,
   });
 
   return res.status(200).json({ message: 'Profile updated.', type: 'success' });
