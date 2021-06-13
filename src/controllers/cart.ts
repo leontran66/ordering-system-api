@@ -14,16 +14,16 @@ export const checkout = async (req: Request, res: Response): Promise<Response> =
     user = req.body.user;
   }
 
-  const { type, notes } = req.body;
+  const { type } = req.body;
 
   const cart = await db.any(getCart, user);
   if (!cart.length) {
-    return res.status(400).json({ message: 'Cart not found.', type: 'error' });
+    return res.status(404).json({ message: 'Cart not found.', type: 'error' });
   }
 
   await check('type').notEmpty().trim().escape()
+    .withMessage('Type is required')
     .run(req);
-  await check('notes').trim().escape().run(req);
 
   const errors = validationResult(req);
   if (!errors.isEmpty()) {
@@ -32,10 +32,10 @@ export const checkout = async (req: Request, res: Response): Promise<Response> =
 
   await db.none(updateCart, {
     type,
-    notes,
+    user,
   });
 
-  return res.status(200).json({ message: 'Order updated.', type: 'success' });
+  return res.status(200).json({ message: 'Checkout completed.', type: 'success' });
 };
 
 export const create = async (req: Request, res: Response): Promise<Response> => {

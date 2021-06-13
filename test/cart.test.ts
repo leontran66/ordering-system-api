@@ -86,6 +86,19 @@ describe('cart route', () => {
     });
   });
 
+  describe('PATCH /api/cart route', () => {
+    test('no cart returns error and 404 Not Found', async () => {
+      expect.assertions(3);
+      const res = await request(app).patch('/api/cart')
+        .send({
+          user: config.secrets.AUTH0_USER_ID,
+        });
+      expect(res.status).toBe(404);
+      expect(res.body.message).toBe('Cart not found.');
+      expect(res.body.type).toBe('error');
+    });
+  });
+
   describe('POST /api/cart route', () => {
     test('empty user returns error and 401 Unauthorized', async () => {
       expect.assertions(3);
@@ -229,6 +242,33 @@ describe('cart route', () => {
         });
       expect(res.status).toBe(200);
       expect(res.body.message).toBe('Cart item deleted.');
+      expect(res.body.type).toBe('success');
+    });
+  });
+
+  describe('PATCH /api/cart route', () => {
+    test('no input returns error and 400 Bad Request', async () => {
+      expect.assertions(3);
+      const res = await request(app).patch('/api/cart')
+        .send({
+          user: config.secrets.AUTH0_USER_ID,
+          type: '',
+        });
+      expect(res.status).toBe(400);
+      expect(res.body.errors[0].msg).toBe('Type is required');
+      expect(res.body.errors[0].param).toBe('type');
+    });
+
+    test('valid input returns success and 200 OK', async () => {
+      expect.assertions(3);
+      const res = await request(app).patch('/api/cart')
+        .send({
+          user: config.secrets.AUTH0_USER_ID,
+          type: 'pickup',
+        });
+      console.log(res.body);
+      expect(res.status).toBe(200);
+      expect(res.body.message).toBe('Checkout completed.');
       expect(res.body.type).toBe('success');
     });
   });
