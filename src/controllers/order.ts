@@ -44,6 +44,11 @@ export const getAll = async (req: Request, res: Response): Promise<Response> => 
     user = req.body.user;
   }
 
+  const orders = await db.any(getAllOrders);
+  if (!orders.length) {
+    return res.status(404).json({ message: 'Orders not found.', type: 'error' });
+  }
+
   if (!user) {
     return res.status(401).json({ message: 'Unauthorized action.', type: 'error' });
   }
@@ -51,11 +56,6 @@ export const getAll = async (req: Request, res: Response): Promise<Response> => 
   const isAdmin = await checkAdmin(user);
   if (!isAdmin) {
     return res.status(401).json({ message: 'Unauthorized action.', type: 'error' });
-  }
-
-  const orders = await db.any(getAllOrders);
-  if (!orders.length) {
-    return res.status(404).json({ message: 'Orders not found.', type: 'error' });
   }
 
   return res.status(200).json({ orders, type: 'success' });
@@ -95,15 +95,6 @@ export const update = async (req: Request, res: Response): Promise<Response> => 
     return res.status(404).json({ message: 'Order not found.', type: 'error' });
   }
 
-  if (!user) {
-    return res.status(401).json({ message: 'Unauthorized action.', type: 'error' });
-  }
-
-  const isAdmin = await checkAdmin(user);
-  if (!isAdmin) {
-    return res.status(401).json({ message: 'Unauthorized action.', type: 'error' });
-  }
-
   await check('status').notEmpty().trim().escape()
     .withMessage('Invalid status')
     .custom(isStatus)
@@ -114,6 +105,15 @@ export const update = async (req: Request, res: Response): Promise<Response> => 
   const errors = validationResult(req);
   if (!errors.isEmpty()) {
     return res.status(400).json({ errors: errors.array() });
+  }
+
+  if (!user) {
+    return res.status(401).json({ message: 'Unauthorized action.', type: 'error' });
+  }
+
+  const isAdmin = await checkAdmin(user);
+  if (!isAdmin) {
+    return res.status(401).json({ message: 'Unauthorized action.', type: 'error' });
   }
 
   await db.none(updateOrder, {

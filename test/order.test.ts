@@ -198,7 +198,11 @@ describe('order route', () => {
 
     test('empty user returns error and 401 Unauthorized', async () => {
       expect.assertions(3);
-      const res = await request(app).patch(`/api/order/${orderID}`);
+      const res = await request(app).patch(`/api/order/${orderID}`)
+        .send({
+          status: 'closed',
+          notes: 'closed',
+        });
       expect(res.status).toBe(401);
       expect(res.body.message).toBe('Unauthorized action.');
       expect(res.body.type).toBe('error');
@@ -209,6 +213,8 @@ describe('order route', () => {
       const res = await request(app).patch(`/api/order/${orderID}`)
         .send({
           user: 'test',
+          status: 'closed',
+          notes: 'closed',
         });
       expect(res.status).toBe(401);
       expect(res.body.message).toBe('Unauthorized action.');
@@ -220,6 +226,8 @@ describe('order route', () => {
       const res = await request(app).patch(`/api/order/${orderID}`)
         .send({
           user: config.secrets.AUTH0_USER_ID,
+          status: 'closed',
+          notes: 'closed',
         });
       expect(res.status).toBe(401);
       expect(res.body.message).toBe('Unauthorized action.');

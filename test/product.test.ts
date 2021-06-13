@@ -41,6 +41,11 @@ describe('product route', () => {
       const res = await request(app).post('/api/product')
         .send({
           user: '',
+          category: categoryID,
+          name: 'product',
+          price: 5.00,
+          description: '',
+          options: [],
         });
       expect(res.status).toBe(401);
       expect(res.body.message).toBe('Unauthorized action.');
@@ -52,6 +57,11 @@ describe('product route', () => {
       const res = await request(app).post('/api/product')
         .send({
           user: 'test',
+          category: categoryID,
+          name: 'product',
+          price: 5.00,
+          description: '',
+          options: [],
         });
       expect(res.status).toBe(401);
       expect(res.body.message).toBe('Unauthorized action.');
@@ -63,6 +73,11 @@ describe('product route', () => {
       const res = await request(app).post('/api/product')
         .send({
           user: config.secrets.AUTH0_USER_ID,
+          category: categoryID,
+          name: 'product',
+          price: 5.00,
+          description: '',
+          options: [],
         });
       expect(res.status).toBe(401);
       expect(res.body.message).toBe('Unauthorized action.');
@@ -158,6 +173,11 @@ describe('product route', () => {
       const res = await request(app).patch(`/api/product/${productID}`)
         .send({
           user: '',
+          category: categoryID,
+          name: 'product',
+          price: 10.00,
+          description: '',
+          options: [],
         });
       expect(res.status).toBe(401);
       expect(res.body.message).toBe('Unauthorized action.');
@@ -169,6 +189,11 @@ describe('product route', () => {
       const res = await request(app).patch(`/api/product/${productID}`)
         .send({
           user: 'test',
+          category: categoryID,
+          name: 'product',
+          price: 10.00,
+          description: '',
+          options: [],
         });
       expect(res.status).toBe(401);
       expect(res.body.message).toBe('Unauthorized action.');
@@ -180,6 +205,11 @@ describe('product route', () => {
       const res = await request(app).patch(`/api/product/${productID}`)
         .send({
           user: config.secrets.AUTH0_USER_ID,
+          category: categoryID,
+          name: 'product',
+          price: 10.00,
+          description: '',
+          options: [],
         });
       expect(res.status).toBe(401);
       expect(res.body.message).toBe('Unauthorized action.');

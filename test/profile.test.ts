@@ -19,8 +19,14 @@ describe('profile route', () => {
       expect.assertions(3);
       const res = await request(app).post('/api/profile')
         .send({
-          abn: '12 123 123 123',
+          abn: '60 579 663 101',
           name: 'profile',
+          phone: '1234 1234',
+          fax: '1234 1234',
+          address: 'hello world',
+          suburb: 'hello world',
+          state: 'QLD',
+          postCode: '1234',
         });
       expect(res.status).toBe(401);
       expect(res.body.message).toBe('Unauthorized action.');
@@ -32,8 +38,14 @@ describe('profile route', () => {
       const res = await request(app).post('/api/profile')
         .send({
           user: config.secrets.AUTH0_USER_ID,
-          abn: '12 123 123 123',
+          abn: '60 579 663 101',
           name: 'profile',
+          phone: '1234 1234',
+          fax: '1234 1234',
+          address: 'hello world',
+          suburb: 'hello world',
+          state: 'QLD',
+          postCode: '1234',
         });
       expect(res.status).toBe(401);
       expect(res.body.message).toBe('Unauthorized action.');
@@ -45,8 +57,14 @@ describe('profile route', () => {
       const res = await request(app).post('/api/profile')
         .send({
           user: 'test',
-          abn: '12 123 123 123',
+          abn: '60 579 663 101',
           name: 'profile',
+          phone: '1234 1234',
+          fax: '1234 1234',
+          address: 'hello world',
+          suburb: 'hello world',
+          state: 'QLD',
+          postCode: '1234',
         });
       expect(res.status).toBe(401);
       expect(res.body.message).toBe('Unauthorized action.');

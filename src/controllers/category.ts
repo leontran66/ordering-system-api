@@ -17,15 +17,6 @@ export const create = async (req: Request, res: Response): Promise<Response> => 
 
   const { title } = req.body;
 
-  if (!user) {
-    return res.status(401).json({ message: 'Unauthorized action.', type: 'error' });
-  }
-
-  const isAdmin = await checkAdmin(user);
-  if (!isAdmin) {
-    return res.status(401).json({ message: 'Unauthorized action.', type: 'error' });
-  }
-
   await check('title').notEmpty().trim().escape()
     .withMessage('Title is required')
     .run(req);
@@ -33,6 +24,15 @@ export const create = async (req: Request, res: Response): Promise<Response> => 
   const errors = validationResult(req);
   if (!errors.isEmpty()) {
     return res.status(400).json({ errors: errors.array() });
+  }
+
+  if (!user) {
+    return res.status(401).json({ message: 'Unauthorized action.', type: 'error' });
+  }
+
+  const isAdmin = await checkAdmin(user);
+  if (!isAdmin) {
+    return res.status(401).json({ message: 'Unauthorized action.', type: 'error' });
   }
 
   await db.none(createCategory, {
@@ -47,6 +47,7 @@ export const get = async (req: Request, res: Response): Promise<Response> => {
   if (!categories.length) {
     return res.status(404).json({ message: 'Categories not found.', type: 'error' });
   }
+
   return res.status(200).json({ categories, type: 'success' });
 };
 
@@ -61,6 +62,11 @@ export const remove = async (req: Request, res: Response): Promise<Response> => 
 
   const { id } = req.params;
 
+  const category = await db.any(getCategory, id);
+  if (category[0].count <= 0) {
+    return res.status(404).json({ message: 'Category not found.', type: 'error' });
+  }
+
   if (!user) {
     return res.status(401).json({ message: 'Unauthorized action.', type: 'error' });
   }
@@ -68,11 +74,6 @@ export const remove = async (req: Request, res: Response): Promise<Response> => 
   const isAdmin = await checkAdmin(user);
   if (!isAdmin) {
     return res.status(401).json({ message: 'Unauthorized action.', type: 'error' });
-  }
-
-  const category = await db.any(getCategory, id);
-  if (category[0].count <= 0) {
-    return res.status(404).json({ message: 'Category not found.', type: 'error' });
   }
 
   await db.none(deleteCategory, id);

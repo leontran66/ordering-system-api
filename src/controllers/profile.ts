@@ -20,15 +20,6 @@ export const create = async (req: Request, res: Response): Promise<Response> => 
     abn, name, phone, fax, address, suburb, state, postCode,
   } = req.body;
 
-  if (!user) {
-    return res.status(401).json({ message: 'Unauthorized action.', type: 'error' });
-  }
-
-  const isAdmin = await checkAdmin(user);
-  if (!isAdmin) {
-    return res.status(401).json({ message: 'Unauthorized action.', type: 'error' });
-  }
-
   const profile = await db.any(getProfile);
   if (profile.length) {
     return res.status(401).json({ message: 'Profile already exists.', type: 'error' });
@@ -59,6 +50,15 @@ export const create = async (req: Request, res: Response): Promise<Response> => 
     return res.status(400).json({ errors: addressErrors });
   }
 
+  if (!user) {
+    return res.status(401).json({ message: 'Unauthorized action.', type: 'error' });
+  }
+
+  const isAdmin = await checkAdmin(user);
+  if (!isAdmin) {
+    return res.status(401).json({ message: 'Unauthorized action.', type: 'error' });
+  }
+
   await db.none(createProfile,
     {
       user,
@@ -80,6 +80,7 @@ export const get = async (req: Request, res: Response): Promise<Response> => {
   if (!profile.length) {
     return res.status(404).json({ message: 'Profile not found.', type: 'error' });
   }
+
   return res.status(200).json({ profile: profile[0] });
 };
 
@@ -95,15 +96,6 @@ export const update = async (req: Request, res: Response): Promise<Response> => 
   const {
     abn, name, phone, fax, address, suburb, state, postCode,
   } = req.body;
-
-  if (!user) {
-    return res.status(401).json({ message: 'Unauthorized action.', type: 'error' });
-  }
-
-  const profile = await db.any(getOwnProfile, user);
-  if (!profile.length) {
-    return res.status(401).json({ message: 'Unauthorized action.', type: 'error' });
-  }
 
   await check('abn').notEmpty().trim().escape()
     .withMessage('ABN is required')
@@ -128,6 +120,15 @@ export const update = async (req: Request, res: Response): Promise<Response> => 
   const addressErrors = isAddress(address, suburb, state, postCode);
   if (addressErrors.length) {
     return res.status(400).json({ errors: addressErrors });
+  }
+
+  if (!user) {
+    return res.status(401).json({ message: 'Unauthorized action.', type: 'error' });
+  }
+
+  const profile = await db.any(getOwnProfile, user);
+  if (!profile.length) {
+    return res.status(401).json({ message: 'Unauthorized action.', type: 'error' });
   }
 
   db.none(updateProfile, {
