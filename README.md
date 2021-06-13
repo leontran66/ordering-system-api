@@ -20,7 +20,7 @@ An API built to manage an ordering system front-end.
   - [Cart](#cart)
   - [Orders](#orders-1)
 
-### Dependencies
+## Dependencies
 
 [axios](https://github.com/axios/axios) - Makes HTTP requests from Node.js<br />
 [cors](https://github.com/expressjs/cors) - Enables CORS<br />
@@ -35,13 +35,13 @@ An API built to manage an ordering system front-end.
 [pg-promise](https://github.com/vitaly-t/pg-promise) - Postgres library for interacting with a Postgres database<br />
 [winston](https://github.com/winstonjs/winston) - Logging library<br />
 
-### Database Structure
+## Database Structure
 
-#### Users
+### Users
 
 User authentication and authorization are managed through the [Auth0](https://auth0.com/) platform.
 
-#### Profile
+### Profile
 
 | Field         | Type    | Information                                                        |
 | ------------- | ------- | ------------------------------------------------------------------ |
@@ -55,13 +55,13 @@ User authentication and authorization are managed through the [Auth0](https://au
 | state         | varchar |                                                                    |
 | postCode      | varchar |                                                                    |
 
-#### Categories
+### Categories
 
 | Field | Type    | Information |
 | ----- | ------- | ----------- |
 | title | varchar |             |
 
-#### Products
+### Products
 
 | Field       | Type    | Information             |
 | ----------- | ------- | ----------------------- |
@@ -70,7 +70,7 @@ User authentication and authorization are managed through the [Auth0](https://au
 | price       | decimal | 2 decimal places        |
 | description | varchar |                         |
 
-#### Product Options
+### Product Options
 
 | Field      | Type    | Information           |
 | ---------- | ------- | --------------------- |
@@ -78,7 +78,7 @@ User authentication and authorization are managed through the [Auth0](https://au
 | name       | varchar |                       |
 | price      | decimal | 2 decimal places      |
 
-#### Orders
+### Orders
 
 | Field   | Type    | Information        |
 | ------- | ------- | ------------------ |
@@ -87,7 +87,7 @@ User authentication and authorization are managed through the [Auth0](https://au
 | type    | varchar |                    |
 | notes   | varchar |                    |
 
-#### Order Items
+### Order Items
 
 | Field      | Type    | Information           |
 | ---------- | ------- | --------------------- |
@@ -95,9 +95,9 @@ User authentication and authorization are managed through the [Auth0](https://au
 | product_id | varchar | Reference to products |
 | quantity   | int     |                       |
 
-### Routes
+## Routes
 
-#### Profile
+### Profile
 
 | Route              | Action         | Auth                 |
 | ------------------ | -------------- | -------------------- |
@@ -105,7 +105,7 @@ User authentication and authorization are managed through the [Auth0](https://au
 | POST /api/profile  | Create profile | Authenticated, Admin |
 | PATCH /api/profile | Update profile | Authenticated, Admin |
 
-#### Categories
+### Categories
 
 | Route                | Action             | Auth                 |
 | -------------------- | ------------------ | -------------------- |
@@ -113,7 +113,7 @@ User authentication and authorization are managed through the [Auth0](https://au
 | POST /api/category   | Create category    | Authenticated, Admin |
 | DELETE /api/category | Delete category    | Authenticated, Admin |
 
-#### Products
+### Products
 
 | Route                   | Action           | Auth                 |
 | ----------------------- | ---------------- | -------------------- |
@@ -123,7 +123,7 @@ User authentication and authorization are managed through the [Auth0](https://au
 | PATCH /api/product/:id  | Update product   | Authenticated, Admin |
 | DELETE /api/product/:id | Delete Product   | Authenticated, Admin |
 
-#### Cart
+### Cart
 
 | Route                | Action                | Auth                |
 | -------------------- | --------------------- | ------------------- |
@@ -134,7 +134,7 @@ User authentication and authorization are managed through the [Auth0](https://au
 | PATCH /api/cart/:id  | Update item in cart   | Authenticated, User |
 | DELETE /api/cart/:id | Delete item from cart | Authenticated, User |
 
-#### Orders
+### Orders
 
 | Route                | Action                  | Auth                         |
 | -------------------- | ----------------------- | ---------------------------- |
