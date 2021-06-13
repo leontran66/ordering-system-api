@@ -20,8 +20,12 @@ export const create = async (req: Request, res: Response): Promise<Response> => 
     abn, name, phone, fax, address, suburb, state, postCode,
   } = req.body;
 
+  if (!user) {
+    return res.status(401).json({ message: 'Unauthorized action.', type: 'error' });
+  }
+
   const isAdmin = await checkAdmin(user);
-  if (!user || !isAdmin) {
+  if (!isAdmin) {
     return res.status(401).json({ message: 'Unauthorized action.', type: 'error' });
   }
 

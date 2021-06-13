@@ -11,10 +11,10 @@ export const getCategories = 'SELECT * FROM categories';
 export const getCategory = 'SELECT count(*) FROM categories WHERE id = $1';
 export const deleteCategory = 'DELETE FROM categories WHERE id = $1';
 
-export const getOrder = 'SELECT * FROM orders WHERE id = $1';
-export const getAllOrders = 'SELECT * FROM orders';
-export const getAllOrdersForUser = 'SELECT * FROM orders WHERE user_id = $1';
-export const updateOrder = 'UPDATE orders SET status = ${status}, notes = ${notes} WHERE id = ${id}';
+export const getOrder = 'SELECT * FROM orders WHERE id = $1 AND NOT status = \'cart\'';
+export const getAllOrders = 'SELECT * FROM orders WHERE NOT status = \'cart\'';
+export const getAllOrdersForUser = 'SELECT * FROM orders WHERE user_id = $1 AND NOT status = \'cart\'';
+export const updateOrder = 'UPDATE orders SET status = ${status}, notes = ${notes} WHERE id = ${id} AND NOT status = \'cart\'';
 
 export const createProduct = 'INSERT INTO products (category_id, name, price, description) VALUES(${category}, ${name}, ${price}, ${description})';
 export const createProductOptions = 'INSERT INTO product_options (product_id, name, price) VALUES(${product_id}, ${name}, ${price})';

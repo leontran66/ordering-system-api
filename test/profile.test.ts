@@ -214,6 +214,6 @@ describe('profile route', () => {
   });
 
   afterAll(async () => {
-    await db.none('DELETE from profile WHERE name = \'profile\'');
+    await db.none('DELETE FROM profile');
   });
 });

@@ -1,6 +1,6 @@
 import request from 'supertest';
 import {
-  createCategory, deleteCategory, getCategory, getProduct,
+  createCategory, deleteCategory, deleteProduct, getCategory, getProduct,
 } from './testQueries';
 import app from '../src/app';
 import config from '../src/config';
@@ -28,7 +28,7 @@ describe('product route', () => {
   describe('GET /api/product/:id route', () => {
     test('invalid id returns error and 404 Not Found', async () => {
       expect.assertions(3);
-      const res = await request(app).get('/api/product/123');
+      const res = await request(app).get('/api/product/0');
       expect(res.status).toBe(404);
       expect(res.body.message).toBe('Product not found.');
       expect(res.body.type).toBe('error');
@@ -188,7 +188,7 @@ describe('product route', () => {
 
     test('product not found returns error and 404 Not Found', async () => {
       expect.assertions(3);
-      const res = await request(app).patch('/api/product/123')
+      const res = await request(app).patch('/api/product/0')
         .send({
           user: config.secrets.AUTH0_ADMIN_ID,
         });
@@ -289,9 +289,9 @@ describe('product route', () => {
       expect(res.body.type).toBe('error');
     });
 
-    test('product not found returns error and 400 Bad Request', async () => {
+    test('product not found returns error and 404 Not Found', async () => {
       expect.assertions(3);
-      const res = await request(app).delete('/api/product/123')
+      const res = await request(app).delete('/api/product/0')
         .send({
           user: config.secrets.AUTH0_ADMIN_ID,
         });
@@ -313,6 +313,7 @@ describe('product route', () => {
   });
 
   afterAll(async () => {
-    await db.none(deleteCategory, 'product');
+    await db.none(deleteProduct);
+    await db.none(deleteCategory);
   });
 });

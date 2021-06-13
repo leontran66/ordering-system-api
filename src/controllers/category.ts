@@ -17,8 +17,12 @@ export const create = async (req: Request, res: Response): Promise<Response> => 
 
   const { title } = req.body;
 
+  if (!user) {
+    return res.status(401).json({ message: 'Unauthorized action.', type: 'error' });
+  }
+
   const isAdmin = await checkAdmin(user);
-  if (!user || !isAdmin) {
+  if (!isAdmin) {
     return res.status(401).json({ message: 'Unauthorized action.', type: 'error' });
   }
 
@@ -57,8 +61,12 @@ export const remove = async (req: Request, res: Response): Promise<Response> => 
 
   const { id } = req.params;
 
+  if (!user) {
+    return res.status(401).json({ message: 'Unauthorized action.', type: 'error' });
+  }
+
   const isAdmin = await checkAdmin(user);
-  if (!user || !isAdmin) {
+  if (!isAdmin) {
     return res.status(401).json({ message: 'Unauthorized action.', type: 'error' });
   }
 

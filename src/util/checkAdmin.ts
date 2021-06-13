@@ -2,7 +2,7 @@ import axios from 'axios';
 import config from '../config';
 import Role from '../types/role';
 
-export default async (user: string):Promise<boolean> => {
+export default async (user: string): Promise<boolean> => {
   const data = {
     audience: `https://${config.secrets.AUTH0_DOMAIN}/api/v2/`,
     client_id: config.secrets.AUTH0_MGMT_CLIENT_ID,

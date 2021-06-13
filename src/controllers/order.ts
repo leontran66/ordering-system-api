@@ -23,12 +23,16 @@ export const get = async (req: Request, res: Response): Promise<Response> => {
     return res.status(404).json({ message: 'Order not found.', type: 'error' });
   }
 
-  const isAdmin = await checkAdmin(user);
-  if (order[0].user_id !== user && !isAdmin) {
-    return res.status(401).json({ message: 'Unauthorized action', type: 'error' });
+  if (!user) {
+    return res.status(401).json({ message: 'Unauthorized action.', type: 'error' });
   }
 
-  return res.status(200).json({ order, type: 'success' });
+  const isAdmin = await checkAdmin(user);
+  if (user !== order[0].user_id && !isAdmin) {
+    return res.status(401).json({ message: 'Unauthorized action.', type: 'error' });
+  }
+
+  return res.status(200).json({ order: order[0], type: 'success' });
 };
 
 export const getAll = async (req: Request, res: Response): Promise<Response> => {
@@ -40,16 +44,21 @@ export const getAll = async (req: Request, res: Response): Promise<Response> => 
     user = req.body.user;
   }
 
-  const isAdmin = await checkAdmin(user);
-  if (!isAdmin) {
-    return res.status(401).json({ message: 'Unauthorized action', type: 'error' });
+  if (!user) {
+    return res.status(401).json({ message: 'Unauthorized action.', type: 'error' });
   }
 
-  const order = await db.any(getAllOrders);
-  if (!order.length) {
+  const isAdmin = await checkAdmin(user);
+  if (!isAdmin) {
+    return res.status(401).json({ message: 'Unauthorized action.', type: 'error' });
+  }
+
+  const orders = await db.any(getAllOrders);
+  if (!orders.length) {
     return res.status(404).json({ message: 'Orders not found.', type: 'error' });
   }
-  return res.status(200).json({ order, type: 'success' });
+
+  return res.status(200).json({ orders, type: 'success' });
 };
 
 export const getAllForUser = async (req: Request, res: Response): Promise<Response> => {
@@ -61,11 +70,12 @@ export const getAllForUser = async (req: Request, res: Response): Promise<Respon
     user = req.body.user;
   }
 
-  const order = await db.any(getAllOrdersForUser, user);
-  if (!order.length) {
+  const orders = await db.any(getAllOrdersForUser, user);
+  if (!orders.length) {
     return res.status(404).json({ message: 'Orders not found.', type: 'error' });
   }
-  return res.status(200).json({ order, type: 'success' });
+
+  return res.status(200).json({ orders, type: 'success' });
 };
 
 export const update = async (req: Request, res: Response): Promise<Response> => {
@@ -77,9 +87,7 @@ export const update = async (req: Request, res: Response): Promise<Response> => 
     user = req.body.user;
   }
 
-  const {
-    status, notes,
-  } = req.body;
+  const { status, notes } = req.body;
   const { id } = req.params;
 
   const order = await db.any(getOrder, id);
@@ -87,12 +95,17 @@ export const update = async (req: Request, res: Response): Promise<Response> => 
     return res.status(404).json({ message: 'Order not found.', type: 'error' });
   }
 
-  const isAdmin = await checkAdmin(user);
-  if (order[0].user !== user || !isAdmin) {
-    return res.status(401).json({ message: 'Unauthorized action', type: 'error' });
+  if (!user) {
+    return res.status(401).json({ message: 'Unauthorized action.', type: 'error' });
   }
 
-  await check('status').trim().escape()
+  const isAdmin = await checkAdmin(user);
+  if (!isAdmin) {
+    return res.status(401).json({ message: 'Unauthorized action.', type: 'error' });
+  }
+
+  await check('status').notEmpty().trim().escape()
+    .withMessage('Invalid status')
     .custom(isStatus)
     .withMessage('Invalid status')
     .run(req);

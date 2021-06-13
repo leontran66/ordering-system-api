@@ -1,5 +1,5 @@
 import request from 'supertest';
-import { getCategory } from './testQueries';
+import { getCategory, deleteCategory } from './testQueries';
 import app from '../src/app';
 import config from '../src/config';
 import db from '../src/config/pg';
@@ -149,5 +149,9 @@ describe('category route', () => {
       expect(res.body.message).toBe('Category deleted.');
       expect(res.body.type).toBe('success');
     });
+  });
+
+  afterAll(async () => {
+    await db.none(deleteCategory);
   });
 });

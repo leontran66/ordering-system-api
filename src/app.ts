@@ -6,6 +6,7 @@ import config from './config';
 
 import * as cart from './controllers/cart';
 import * as category from './controllers/category';
+import * as order from './controllers/order';
 import * as product from './controllers/product';
 import * as profile from './controllers/profile';
 import errorHandler from './util/errorHandler';
@@ -29,6 +30,10 @@ app.delete('/api/cart/:id', cart.deleteItem);
 app.get('/api/category', category.get);
 app.post('/api/category', category.create);
 app.delete('/api/category/:id', category.remove);
+app.get('/api/order', order.getAllForUser);
+app.get('/api/order/all', order.getAll);
+app.get('/api/order/:id', order.get);
+app.patch('/api/order/:id', order.update);
 app.get('/api/product', product.getAll);
 app.get('/api/product/:id', product.get);
 app.post('/api/product', product.create);

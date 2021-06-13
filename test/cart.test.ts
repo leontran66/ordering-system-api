@@ -1,11 +1,11 @@
 import request from 'supertest';
+import {
+  createCategory, createProduct, deleteCategory, deleteOrder, deleteOrderItems,
+  getCategory, deleteProduct, getProduct, getCartItem,
+} from './testQueries';
 import app from '../src/app';
 import config from '../src/config';
 import db from '../src/config/pg';
-import {
-  deleteCart, deleteCartItems, createCategory, deleteCategory, getCategory,
-  createProduct, deleteProduct, getProduct, getCartItem,
-} from './testQueries';
 
 describe('cart route', () => {
   let productID: string;
@@ -47,7 +47,7 @@ describe('cart route', () => {
   describe('POST /api/cart/:id route', () => {
     test('no cart returns error and 404 Not Found', async () => {
       expect.assertions(3);
-      const res = await request(app).post('/api/cart/123')
+      const res = await request(app).post('/api/cart/0')
         .send({
           user: config.secrets.AUTH0_USER_ID,
           quantity: 2,
@@ -61,7 +61,7 @@ describe('cart route', () => {
   describe('PATCH /api/cart/:id route', () => {
     test('no cart returns error and 404 Not Found', async () => {
       expect.assertions(3);
-      const res = await request(app).post('/api/cart/123')
+      const res = await request(app).post('/api/cart/0')
         .send({
           user: config.secrets.AUTH0_USER_ID,
           item: productID,
@@ -76,7 +76,7 @@ describe('cart route', () => {
   describe('DELETE /api/cart/:id route', () => {
     test('no cart returns error and 404 Not Found', async () => {
       expect.assertions(3);
-      const res = await request(app).post('/api/cart/123')
+      const res = await request(app).post('/api/cart/0')
         .send({
           user: config.secrets.AUTH0_USER_ID,
         });
@@ -266,7 +266,6 @@ describe('cart route', () => {
           user: config.secrets.AUTH0_USER_ID,
           type: 'pickup',
         });
-      console.log(res.body);
       expect(res.status).toBe(200);
       expect(res.body.message).toBe('Checkout completed.');
       expect(res.body.type).toBe('success');
@@ -274,9 +273,10 @@ describe('cart route', () => {
   });
 
   afterAll(async () => {
-    await db.none(deleteCartItems, productID);
-    await db.none(deleteCart);
-    await db.none(deleteProduct, 'cart');
-    await db.none(deleteCategory, 'cart');
+    await db.none(deleteOrderItems);
+    await db.none(deleteOrder);
+    await db.none(deleteProduct);
+    await db.none(deleteCategory);
+    await db.none('DELETE FROM profile');
   });
 });
